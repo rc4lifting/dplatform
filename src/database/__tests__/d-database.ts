@@ -497,7 +497,7 @@ describe("Dplatform Database", () => {
         ).resolves.toEqual("There is no user with that telegram ID!");
       });
     });
-    describe("getSlots method", () => {
+    describe("getSlotsByUser method", () => {
       afterAll(async () => {
         await test_client.from("SLOTS").delete().eq("booked_by", test_id);
       });
@@ -513,23 +513,15 @@ describe("Dplatform Database", () => {
           endTime: "2000-01-01T14:00:00+0000",
         });
         return expect(
-          test_database.getSlots("test").then((result) =>
-            result.match({
-              ok: (array) => array.length.toString(),
-              err: (err) => err.message,
-            })
-          )
-        ).resolves.toEqual("2");
+          test_database.getSlotsByUser("test").then((result) => result.length)
+        ).resolves.toEqual(2);
       });
       it("returns an error attempting to access a nonexistent user", async () => {
         return expect(
-          test_database.getSlots("i-don't-exist").then((result) =>
-            result.match({
-              ok: (array) => array.length.toString(),
-              err: (err) => err.message,
-            })
-          )
-        ).resolves.toEqual("There is no user with that telegram ID!");
+          test_database
+            .getSlotsByUser("i-don't-exist")
+            .then((result) => result.length)
+        ).rejects.toThrowError();
       });
     });
     describe("getUserEmail method", () => {

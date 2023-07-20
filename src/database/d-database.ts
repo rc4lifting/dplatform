@@ -312,9 +312,7 @@ export class DDatabase {
    * @returns A result instance representing set
    *          of all bookings or an error if query fails
    */
-  public async getSlotsByUser(
-    telegramId: string
-  ): Promise<Slot[]> {
+  public async getSlotsByUser(telegramId: string): Promise<Slot[]> {
     const userId = await this.getUserId(telegramId);
     if (userId.isErr()) {
       // Safe to cast, as we have determined that
@@ -333,10 +331,7 @@ export class DDatabase {
       });
   }
 
-  public async getSlotsByTime(
-    startTime: Date,
-    endTime: Date
-  ): Promise<Slot[]> {
+  public async getSlotsByTime(startTime: Date, endTime: Date): Promise<Slot[]> {
     return this.client
       .from("SLOTS")
       .select("*")
