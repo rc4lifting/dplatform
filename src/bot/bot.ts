@@ -1,6 +1,7 @@
 import { Telegraf, Context, Scenes, Composer, session, Markup } from "telegraf";
 import { EmailVerifier } from "../email/email";
 import { DDatabase } from "../database/d-database";
+import { DVisualiser } from "../dvisualiser/dvisualiser";
 import { WizardContext, WizardScene } from "telegraf/typings/scenes";
 import * as fs from "fs";
 import * as yaml from "js-yaml";
@@ -8,6 +9,7 @@ import { GoogleSpreadsheet } from "google-spreadsheet";
 import { LiveUpdater } from "../live_updater/live_updater";
 import { CronJob } from "cron";
 import { DManager } from "../dmanager";
+import { addDays, weekStart } from "../timeutils";
 
 interface Config {
   botToken: string;
@@ -181,6 +183,15 @@ class TelegramBot {
       `;
       ctx.reply(sheetsMessage);
     });
+
+    this.bot.command("view_ballots", async (ctx) => {
+      const ballotsStart = addDays(weekStart(), 7)
+      const ballotsEnd = addDays(ballotsStart, 6)
+      const ballots = await this.database.getBallotsByTime(ballotsStart, ballotsEnd)
+      const imageReply = await DVisualiser.showBallots(ballots)
+      ctx.replyWithPhoto(imageReply);
+    });
+
 
     // https://github.com/telegraf/telegraf/issues/705
 
