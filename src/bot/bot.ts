@@ -185,13 +185,15 @@ class TelegramBot {
     });
 
     this.bot.command("view_ballots", async (ctx) => {
-      const ballotsStart = addDays(weekStart(), 7)
-      const ballotsEnd = addDays(ballotsStart, 6)
-      const ballots = await this.database.getBallotsByTime(ballotsStart, ballotsEnd)
-      const imageReply = await DVisualiser.showBallots(ballots)
+      const ballotsStart = addDays(weekStart(), 7);
+      const ballotsEnd = addDays(ballotsStart, 6);
+      const ballots = await this.database.getBallotsByTime(
+        ballotsStart,
+        ballotsEnd
+      );
+      const imageReply = await DVisualiser.showBallots(ballots);
       ctx.replyWithPhoto(imageReply);
     });
-
 
     // https://github.com/telegraf/telegraf/issues/705
 
