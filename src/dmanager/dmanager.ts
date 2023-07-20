@@ -1,6 +1,6 @@
 import { DDatabase, Ballot } from "../database";
 import { shuffle } from "./algorithms";
-import { weekStart, addDays } from "../timeutils"; 
+import { weekStart, addDays } from "../timeutils";
 
 export class DManager {
   private database: DDatabase;
@@ -74,10 +74,7 @@ export class DManager {
     endTime: string;
   }): Promise<void> {
     const startTime = new Date(booking.startTime);
-    if (
-      startTime >= addDays(weekStart(), 7) ||
-      startTime < weekStart()
-    ) {
+    if (startTime >= addDays(weekStart(), 7) || startTime < weekStart()) {
       throw new Error("Booking can only be done for the current week!");
     }
     const res = await this.database.bookSlot(booking);
