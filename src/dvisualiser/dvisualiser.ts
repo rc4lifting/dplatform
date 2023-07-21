@@ -57,10 +57,11 @@ export class DVisualiser {
       format: "png",
       width: 800,
       height: 600,
-    }).then(function (dataURI) {
+    }).then(function (dataURI: string) {
       return dataURI;
     });
   }
+  
   static showSlots() {
     return;
   }
