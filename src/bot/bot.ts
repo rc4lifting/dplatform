@@ -693,7 +693,72 @@ export class TelegramBot {
         }
       }
     );
+    this.bot.command(
+      "deleteBooking",
+      checkRegistrationAndVerification(),
+      async (ctx) => {
+        try {
+          const userId = ctx.from!.id.toString();
+          const bookings = await this.database.getBookedSlotsByUser(userId);
 
+          // Check if there are no bookings.
+          if (!bookings.length) {
+            return ctx.reply("You have no bookings to delete.");
+          }
+
+          // Map bookings to readable format.
+          const formattedBookings = bookings.map((booking, index) => {
+            const start = utcToReadableString(booking.time_begin);
+            const end = utcToReadableString(booking.time_end);
+            return `${index + 1}) ${start} to ${end}`;
+          });
+
+          // Map bookings to callback buttons.
+          const buttons = bookings.map((booking, index) => {
+            return Markup.button.callback(
+              `Delete ${index + 1}`,
+              `DELETE_BOOKING ${booking.id}`
+            );
+          });
+
+          // Construct the final message.
+          const message = ["Current bookings:", ...formattedBookings].join(
+            "\n"
+          );
+
+          ctx.reply(message, Markup.inlineKeyboard(buttons));
+        } catch (error) {
+          ctx.reply("An error occurred. Please try again.");
+        }
+      }
+    );
+    this.bot.action(
+      /^DELETE_BOOKING (.+)/,
+      checkRegistrationAndVerification(),
+      async (ctx) => {
+        try {
+          const bookingId = parseInt(ctx.match![1]);
+          const userId = (
+            await this.database.getUserId(ctx.from!.id.toString())
+          ).unwrap();
+          //get booking
+          const booking = await this.database.getBookingById(bookingId);
+          //check if booking exists
+          if (!booking) {
+            return ctx.editMessageText("Booking does not exist.");
+          }
+          //check if booking belongs to user
+          if (booking.booked_by !== userId) {
+            return ctx.editMessageText("Booking does not belong to you.");
+          }
+          //delete booking
+          await this.database.deleteBookingById(bookingId);
+          ctx.editMessageText("Booking deleted.");
+        } catch (error) {
+          ctx.editMessageText("An error occurred. Please try again.");
+        }
+      }
+    );
     this.bot.action(/^BOD (.+)/, checkRegistrationAndVerification(), (ctx) => {
       const date = ctx.match![1];
 
@@ -763,6 +828,71 @@ export class TelegramBot {
         Markup.inlineKeyboard(buttons)
       );
     });
+
+    this.bot.command(
+      "deleteBallot",
+      checkRegistrationAndVerification(),
+      async (ctx) => {
+        try {
+          const userId = ctx.from!.id.toString();
+          const ballots = await this.database.getBallotsByUser(userId);
+
+          // Check if there are no bookings.
+          if (!ballots.length) {
+            return ctx.reply("You have no bookings to delete.");
+          }
+
+          // Map bookings to readable format.
+          const formattedBookings = ballots.map((ballot, index) => {
+            const start = utcToReadableString(ballot.time_begin);
+            const end = utcToReadableString(ballot.time_end);
+            return `${index + 1}) ${start} to ${end}`;
+          });
+
+          // Map bookings to callback buttons.
+          const buttons = ballots.map((ballot, index) => {
+            return Markup.button.callback(
+              `Delete ${index + 1}`,
+              `DELETE_BALLOT ${ballot.id}`
+            );
+          });
+
+          // Construct the final message.
+          const message = ["Current ballots:", ...formattedBookings].join("\n");
+
+          ctx.reply(message, Markup.inlineKeyboard(buttons));
+        } catch (error) {
+          ctx.reply("An error occurred. Please try again.");
+        }
+      }
+    );
+    this.bot.action(
+      /^DELETE_BALLOT (.+)/,
+      checkRegistrationAndVerification(),
+      async (ctx) => {
+        try {
+          const ballotId = parseInt(ctx.match![1]);
+          const userId = (
+            await this.database.getUserId(ctx.from!.id.toString())
+          ).unwrap();
+          //get booking
+          const ballot = await this.database.getBallotById(ballotId);
+          //check if booking exists
+          if (!ballot) {
+            return ctx.editMessageText("Ballot does not exist.");
+          }
+          //check if booking belongs to user
+          if (ballot.user_id !== userId) {
+            return ctx.editMessageText("Ballot does not belong to you.");
+          }
+          //delete booking
+          await this.database.deleteBallotById(ballotId);
+          ctx.editMessageText("Ballot deleted.");
+        } catch (error) {
+          ctx.editMessageText("An error occurred. Please try again.");
+        }
+      }
+    );
 
     this.bot.action(
       /^BOET (.+) (.+)/,

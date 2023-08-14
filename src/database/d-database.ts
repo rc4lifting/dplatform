@@ -164,7 +164,7 @@ export class DDatabase {
    * @returns A result instance representing the system ID
    *          or an error if query fails
    */
-  private async getUserId(telegramId: string): Promise<Result<number, Error>> {
+  public async getUserId(telegramId: string): Promise<Result<number, Error>> {
     return this.isUser(telegramId).then((added) =>
       added
         ? this.client
@@ -717,5 +717,61 @@ export class DDatabase {
       // You might want to do more with the error here, like logging it
       throw error;
     }
+  }
+  public async getBallotById(id: number): Promise<Ballot | null> {
+    return this.client
+      .from("BALLOTS")
+      .select("*")
+      .eq("id", id)
+      .then((response) => {
+        if (response.error) {
+          throw new Error(response.error.message);
+        }
+        const ballotData = response.data;
+        if (ballotData.length > 0) {
+          return ballotData[0];
+        }
+        return null;
+      });
+  }
+  public async getBookingById(id: number): Promise<Slot | null> {
+    return this.client
+      .from("SLOTS")
+      .select("*")
+      .eq("id", id)
+      .then((response) => {
+        if (response.error) {
+          throw new Error(response.error.message);
+        }
+        const bookingData = response.data;
+        if (bookingData.length > 0) {
+          return bookingData[0];
+        }
+        return null;
+      });
+  }
+
+  public async deleteBookingById(id: number): Promise<void> {
+    return this.client
+      .from("SLOTS")
+      .delete()
+      .eq("id", id)
+      .then((response) => {
+        if (response.error) {
+          throw new Error(response.error.message);
+        }
+      });
+  }
+
+  public async deleteBallotById(id: number): Promise<void> {
+    return this.client
+      .from("BALLOTS")
+      .delete()
+      .eq("id", id)
+      .then((response) => {
+        if (response.error) {
+          throw new Error(response.error.message);
+        }
+      });
   }
 }
