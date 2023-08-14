@@ -672,4 +672,50 @@ export class DDatabase {
         return response.data;
       });
   }
+  public async getBallotsByUser(telegramId: string): Promise<Ballot[]> {
+    const currentDateTime = new Date().toISOString();
+    try {
+      const userId = await this.getUserId(telegramId);
+      if (!userId) {
+        throw new Error("User ID not found");
+      }
+
+      const response = await this.client
+        .from("BALLOTS")
+        .select("*")
+        .eq("user_id", userId.unwrap())
+        .gte("time_begin", currentDateTime);
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+      return response.data;
+    } catch (error) {
+      // You might want to do more with the error here, like logging it
+      throw error;
+    }
+  }
+  public async getBookedSlotsByUser(telegramId: string): Promise<Slot[]> {
+    const currentDateTime = new Date().toISOString();
+    try {
+      const userId = await this.getUserId(telegramId);
+      if (!userId) {
+        throw new Error("User ID not found");
+      }
+
+      const response = await this.client
+        .from("SLOTS")
+        .select("*")
+        .eq("booked_by", userId.unwrap())
+        .gte("time_begin", currentDateTime);
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+      return response.data;
+    } catch (error) {
+      // You might want to do more with the error here, like logging it
+      throw error;
+    }
+  }
 }

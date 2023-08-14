@@ -27,10 +27,11 @@ interface MyWizardSession extends Scenes.WizardSessionData {
   email: string;
   room_no: string;
 }
+
 type MyContext = Scenes.WizardContext<MyWizardSession>;
 //https://github.com/feathers-studio/telegraf-docs/blob/master/examples/wizards/wizard-with-custom-scene-session.ts
 //const nameStepHandler = new Composer<Scenes.WizardContext>();
-class TelegramBot {
+export class TelegramBot {
   private bot: Telegraf<MyContext>;
   private verifier: EmailVerifier;
   private database: DDatabase;
@@ -419,10 +420,6 @@ class TelegramBot {
       return slots;
     };
 
-    this.bot.command("testupdateballots", async (ctx) => {
-      await this.updater.updateSheets();
-    });
-
     // Helper function to generate the dates for the ith week
     const generateDates = (weekOffset = 0) => {
       // Ensure that weekOffset is an integer.
@@ -611,6 +608,89 @@ class TelegramBot {
           return [Markup.button.callback(formattedDate, `BOD ${date}`)];
         });
         ctx.reply("Select a date:", Markup.inlineKeyboard(buttons));
+      }
+    );
+
+    function utcToReadableString(utcDateString: string): string {
+      const options: Intl.DateTimeFormatOptions = {
+        year: "numeric",
+        month: "short", // "Jan", "Feb", etc.
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        timeZoneName: "short",
+        timeZone: "Asia/Singapore", // Adjusted for Singapore Time (SGT)
+      };
+
+      return new Intl.DateTimeFormat("en-SG", options).format(
+        new Date(utcDateString)
+      );
+    }
+
+    this.bot.command(
+      "bookings",
+      checkRegistrationAndVerification(),
+      async (ctx) => {
+        try {
+          const userId = ctx.from!.id.toString();
+          const ballots = await this.database.getBookedSlotsByUser(userId);
+
+          // Check if the user has any bookings.
+          if (!ballots.length) {
+            return ctx.reply("You have no bookings.");
+          }
+
+          // Format each ballot.
+          const formattedBallots = ballots.map((ballot, index) => {
+            const start = utcToReadableString(ballot.time_begin);
+            const end = utcToReadableString(ballot.time_end);
+            return `${index + 1}) ${start} to ${end}`;
+          });
+
+          // Construct the reply message.
+          const message = ["Here are your bookings:", ...formattedBallots].join(
+            "\n"
+          );
+
+          ctx.reply(message);
+        } catch (error) {
+          // Consider adding error handling/logging here.
+          ctx.reply("An error occurred. Please try again.");
+        }
+      }
+    );
+
+    this.bot.command(
+      "ballots",
+      checkRegistrationAndVerification(),
+      async (ctx) => {
+        try {
+          const userId = ctx.from!.id.toString();
+          const ballots = await this.database.getBallotsByUser(userId);
+
+          // Check if the user has any bookings.
+          if (!ballots.length) {
+            return ctx.reply("You have no ballots.");
+          }
+
+          // Format each ballot.
+          const formattedBallots = ballots.map((ballot, index) => {
+            const start = utcToReadableString(ballot.time_begin);
+            const end = utcToReadableString(ballot.time_end);
+            return `${index + 1}) ${start} to ${end}`;
+          });
+
+          // Construct the reply message.
+          const message = ["Here are your ballots:", ...formattedBallots].join(
+            "\n"
+          );
+
+          ctx.reply(message);
+        } catch (error) {
+          // Consider adding error handling/logging here.
+          ctx.reply("An error occurred. Please try again.");
+        }
       }
     );
 
